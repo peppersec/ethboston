@@ -4,11 +4,24 @@ from umbral import config, pre, keys, signing
 from umbral.curve import SECP256K1
 from flask_cors import CORS
 import random
+import json
 
 config.set_default_curve(SECP256K1)
 
 app = Flask(__name__)
 CORS(app)
+
+def getUmbralPublicFromHex(str):
+    public_key_dirty = str 
+    public_key_hex = "03" + public_key_dirty[-64:]
+    public_key = keys.UmbralPublicKey.from_bytes(bytes.fromhex(public_key_hex))
+    return public_key
+
+def getUmbralPrivateFromHex(str):
+    private_key_dirty = str 
+    private_key_hex = public_key_dirty[-64:]
+    private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(private_key_hex))
+    return private_key
 
 @app.route('/setup', methods=['POST'])
 def setup_route():
@@ -30,7 +43,22 @@ def setup_route():
     #m = int(request.json['m'] || '2')
     m = int(request.json['m'])
 
-    return (setup(alices_private_key, bobs_private_key, n, m)), 200
+    alices_public_key, alices_signing_key, alices_verifying_key, bobs_public_key, kfrags = setup(alices_private_key, bobs_private_key, n, m)
+    # print(result)
+
+    serialized_kfrags = list()
+    for kfrag in kfrags:
+        serialized_kfrags.append(kfrag.to_bytes().hex())
+
+    responce = json.dumps({
+        "alices_public_key": alices_public_key.to_bytes().hex(), 
+        "alices_signing_key": alices_signing_key.to_bytes().hex(),
+        "alices_verifying_key": alices_verifying_key.to_bytes().hex(),
+        "kfrags": serialized_kfrags
+    })
+    print(responce)
+
+    return responce, 200
 
 
 def setup(alices_private_key, bobs_private_key, n, m):
@@ -43,6 +71,7 @@ def setup(alices_private_key, bobs_private_key, n, m):
 
     alices_signing_key = keys.UmbralPrivateKey.gen_key()
     alices_verifying_key = alices_signing_key.get_pubkey()
+    # assert alices_public_key == alices_verifying_key # it souldn't
     alices_signer = signing.Signer(private_key=alices_signing_key)
 
     # Generate Umbral keys for Bob.
@@ -60,10 +89,20 @@ def setup(alices_private_key, bobs_private_key, n, m):
                                  threshold=m,
                                  N=n)
 
-    return alices_public_key, alices_signing_key, alices_verifying_key, alices_signer, bobs_public_key, kfrags
+    return alices_public_key, alices_signing_key, alices_verifying_key, bobs_public_key, kfrags
 
 
 @app.route('/en', methods=['POST'])
+def en_route():
+    if not request.json :
+        abort(400)
+    alices_public_key_dirty = request.json['alices_public_key']
+    alices_public_key_hex = "03" + alices_public_key_dirty[-64:]
+    alices_public_key = keys.UmbralPublicKey.from_bytes(bytes.fromhex(alices_public_key_hex))
+
+    plaintext =  request.json['plaintext']
+    return (en(alices_public_key, plaintext)), 200
+
 def en(alices_public_key, plaintext):
     ################# ENCRYPT
     # Encrypt data with Alice's public key.
@@ -72,7 +111,27 @@ def en(alices_public_key, plaintext):
     ciphertext, capsule = pre.encrypt(alices_public_key, plaintext)
     return ciphertext, capsule
 
+
 @app.route('/de', methods=['POST'])
+def de_route():
+    if not request.json:
+        abort(400)
+    capsule_raw = request.json['capsule']
+    capsule = Capsule.from_bytes(bytes.fromHex(capsule_raw))
+
+    alices_public_key = getUmbralPublicFromHex(request.json['alices_public_key'])
+    alices_verifying_key = getUmbralPublicFromHex(request.json['alices_verifying_key']) # ? maybe without 03
+    ciphertext = request.json['ciphertext']
+    bobs_private_key = getUmbralPrivateFromHex(request.json['bobs_private_key'])
+    # kfrags
+    serialized_kfrags = request.json['kfrags']
+    kfrags = []
+    for skfrag in serialized_kfrags:
+        kfrags.append(KFrag.from_bytes(bytes.fromHex(skfrag)))
+
+
+    return "", 200
+
 def de(capsule, alices_public_key, alices_verifying_key, ciphertext, bobs_private_key, kfrags):
     bobs_public_key = bobs_private_key.get_pubkey()
     # Several Ursulas perform re-encryption, and Bob collects the resulting `cfrags`.
@@ -114,7 +173,7 @@ def demo2():
     bobs_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(bobs_private_key_hex))
     n = 3
     m = 2
-    alices_public_key, alices_signing_key, alices_verifying_key, alices_signer, bobs_public_key, kfrags = setup(alices_private_key, bobs_private_key, n, m)
+    alices_public_key, alices_signing_key, alices_verifying_key, bobs_public_key, kfrags = setup(alices_private_key, bobs_private_key, n, m)
 
 
     ################# ENCRYPT
