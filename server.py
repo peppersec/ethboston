@@ -24,8 +24,8 @@ def encrypt():
     alices_signer = signing.Signer(private_key=alices_signing_key)
 
     #signedText
-    #0x1206df9aa1d4a0b924f01cc75aa4b2456c4490b77d72f955aa331a59ec8f5863024b94a686d1e4cdd5057f4d01eb6fa2431b5ad8a4041b7ab1f9f55b6f1cc6ac1b
-    bob = keys.UmbralPublicKey.from_bytes(bytes.fromhex('03' + bob_public_key[:64]))
+    
+    bob = keys.UmbralPublicKey.from_bytes(bytes.fromhex("03" + bob_public_key[:64]))
     ciphertext, capsule = pre.encrypt(alices_verifying_key, str.encode(signedtext))
 #grants access to Bob
     
@@ -46,9 +46,10 @@ def decrypt():
     ciphertext = request.json['data']
     capsule = request.json['capsule']
 
-    cleartext = pre.decrypt(ciphertext=ciphertext,
-        capsule=capsule,
-        decrypting_key=bob_private_key)
+    bobs = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(bob_private_key[:64]))
+    cleartext = pre.decrypt(ciphertext=bytes.fromhex(ciphertext),
+        capsule=bytes.fromhex(capsule),
+        decrypting_key=bobs)
 
     return jsonify(cleartext), 200
 
