@@ -134,7 +134,7 @@ def de_route():
     for skfrag in serialized_kfrags:
         kfrags.append(KFrag.from_bytes(bytes.fromHex(skfrag)))
 
-    de()
+    de(capsule, alices_public_key, alices_verifying_key, ciphertext, bobs_private_key, kfrags)
 
     return "", 200
 
