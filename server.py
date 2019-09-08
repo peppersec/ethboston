@@ -11,6 +11,28 @@ app = Flask(__name__)
 CORS(app)
 
 @app.route('/setup', methods=['POST'])
+def setup_route():
+    if not request.json :
+        abort(400)
+
+    # '0x16387146e0be3b7da18fc40e3c231c4d320d0e087c310ac49de1c178dde54398'
+    alice_dirty_private_key = request.json['alices_private_key'] 
+    alices_private_key_hex = alice_dirty_private_key[-64:]
+    alices_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(alices_private_key_hex))
+    # bobs_private_key = keys.UmbralPrivateKey.gen_key()
+    # "0xb6bb217955486f4cd9b2662fa909b0d4a207c8dae6f148be5e7ca94ed3fbdf0c"
+    bobs_dirty_private_key = request.json['bobs_private_key']
+    bobs_private_key_hex = bobs_dirty_private_key[-64:]
+    bobs_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(bobs_private_key_hex))
+
+    # n = int(request.json['n'] || '3')
+    n = int(request.json['n'])
+    #m = int(request.json['m'] || '2')
+    m = int(request.json['m'])
+
+    return (setup(alices_private_key, bobs_private_key, n, m)), 200
+
+
 def setup(alices_private_key, bobs_private_key, n, m):
     #################
     # Generate Umbral keys for Alice.
@@ -29,9 +51,6 @@ def setup(alices_private_key, bobs_private_key, n, m):
     bobs_public_key = bobs_private_key.get_pubkey()
     print("bobs_public_key", bobs_public_key)
 
-    ################# [][]
-    # n = 3
-    # m = 2
 
     # Alice generates "M of N" re-encryption key fragments (or "KFrags") for Bob.
     # In this example, 10 out of 20.
@@ -85,8 +104,14 @@ def demo2():
     #################
     # Generate Umbral keys for Alice.
     ################# []
-    alices_private_key = keys.UmbralPrivateKey.gen_key()
-    bobs_private_key = keys.UmbralPrivateKey.gen_key()
+    # alices_private_key = keys.UmbralPrivateKey.gen_key()
+    alice_dirty_private_key = '0x16387146e0be3b7da18fc40e3c231c4d320d0e087c310ac49de1c178dde54398'
+    alices_private_key_hex = alice_dirty_private_key[-64:]
+    alices_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(alices_private_key_hex))
+    # bobs_private_key = keys.UmbralPrivateKey.gen_key()
+    bobs_dirty_private_key = "0xb6bb217955486f4cd9b2662fa909b0d4a207c8dae6f148be5e7ca94ed3fbdf0c"
+    bobs_private_key_hex = bobs_dirty_private_key[-64:]
+    bobs_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(bobs_private_key_hex))
     n = 3
     m = 2
     alices_public_key, alices_signing_key, alices_verifying_key, alices_signer, bobs_public_key, kfrags = setup(alices_private_key, bobs_private_key, n, m)
