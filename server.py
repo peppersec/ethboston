@@ -2,11 +2,13 @@
 from flask import Flask, jsonify, request, abort
 from umbral import config, pre, keys, signing
 from umbral.curve import SECP256K1
+from flask_cors import CORS
 import random
 
 config.set_default_curve(SECP256K1)
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/encrypt', methods=['POST'])
 def encrypt():
