@@ -29,7 +29,9 @@ def setup_route():
         abort(400)
 
     # '0x16387146e0be3b7da18fc40e3c231c4d320d0e087c310ac49de1c178dde54398'
+    print(request.json)
     alice_dirty_private_key = request.json['alices_private_key'] 
+    print(request.json)
     alices_private_key_hex = alice_dirty_private_key[-64:]
     alices_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(alices_private_key_hex))
     # bobs_private_key = keys.UmbralPrivateKey.gen_key()
@@ -113,6 +115,7 @@ def en(alices_public_key, plaintext):
     # Encrypt data with Alice's public key.
     ################# []
     # plaintext = b'Proxy Re-Encryption is cool!'
+
     ciphertext, capsule = pre.encrypt(alices_public_key, str.encode(plaintext))
     return ciphertext, capsule
 
