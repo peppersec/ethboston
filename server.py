@@ -43,7 +43,7 @@ def decrypt():
     bob_private_key = request.json['recipient']
     ciphertext = request.json['data']
     capsule = request.json['capsule']
-    
+
     cleartext = pre.decrypt(ciphertext=ciphertext,
         capsule=capsule,
         decrypting_key=bob_private_key)
@@ -51,4 +51,4 @@ def decrypt():
     return jsonify(cleartext), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=3000)

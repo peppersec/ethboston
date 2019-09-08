@@ -7,8 +7,8 @@ Docker :
     
     docker build --rm -t rest-server:latest .
     
-    Run container -d
-    docker run --rm  -p 5000:5000 --name rest-server rest-server:latest
+    Run container 
+    docker run --rm -d -p 3000:3000 --name rest-server rest-server:latest
     
     Read logs from container
     docker logs rest-server
