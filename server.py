@@ -16,7 +16,9 @@ def setup_route():
         abort(400)
 
     # '0x16387146e0be3b7da18fc40e3c231c4d320d0e087c310ac49de1c178dde54398'
+    print(request.json)
     alice_dirty_private_key = request.json['alices_private_key'] 
+    print(request.json)
     alices_private_key_hex = alice_dirty_private_key[-64:]
     alices_private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(alices_private_key_hex))
     # bobs_private_key = keys.UmbralPrivateKey.gen_key()
@@ -30,7 +32,9 @@ def setup_route():
     #m = int(request.json['m'] || '2')
     m = int(request.json['m'])
 
-    return (setup(alices_private_key, bobs_private_key, n, m)), 200
+    
+    result = setup(alices_private_key, bobs_private_key, n, m)
+    return jsonify(result), 200
 
 
 def setup(alices_private_key, bobs_private_key, n, m):
