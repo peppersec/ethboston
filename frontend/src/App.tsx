@@ -2,12 +2,13 @@ import React from 'react';
 import logo from './logo.svg';
 import logoNu from './logoNu.png';
 import './App.css';
-import {SetUp} from "./SetUp";
-import {Decryptor} from "./Decryptor";
 import {Encryptor} from "./Encryptor";
+import {Decryptor} from "./Decryptor";
 import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
+import { SetUp } from './SetUp';
 
 function App() {
+  //const [alicePubKey, setAlicePubKey] = useState("");
   return (
     <div className="App" >
       <header className="App-header">
@@ -16,9 +17,9 @@ function App() {
               <div style={{ maxWidth: "80vw" }}>
                   <nav>
                       <Link to="/">SetUp</Link>
-                      <br/>
-                      <Link to="/encryptor">Encryptor</Link>
-                      <br/>
+                        <br/>
+                      <Link to="/encryptor">Encrypt</Link>
+                        <br/>
                       <Link to="/decryptor">Decryptor</Link>
                   </nav>
                   <Switch>

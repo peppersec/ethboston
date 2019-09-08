@@ -4,9 +4,11 @@ import {Button, InputGroup, Text} from "@blueprintjs/core";
 import {Intent} from "@blueprintjs/core/lib/esm/common/intent";
 import Axios from "axios";
 // import { Example, handleStringChange, IExampleProps } from "@blueprintjs/docs-theme";
-
+// "localhost:5000"
+// "167.99.255.241:5000"
+const baseUrl = "localhost:5000"
 export const Encryptor = () => {
-    const [alicePubKey, setAlicePubKey] = useState("0x03edd6db086fc9d45194253ad64decc24a699ee1bd498dabdcfdfbb7ecd3e94cfb");
+    const [alicePubKey, setAlicePubKey] = useState("03edd6db086fc9d45194253ad64decc24a699ee1bd498dabdcfdfbb7ecd3e94cfb");
     const [message, setMessage] = useState("message");
     const [capsule, setCapsule] = useState("");
     const [cypertext, setCypertext] = useState("");
@@ -14,10 +16,10 @@ export const Encryptor = () => {
 
     const encryptButtonHandler = async () => {
 
-        const url = (process.env.NODE_ENV === 'production' ? "https" : "http") + "://167.99.255.241:5000/encrypt";
+        const url = (process.env.NODE_ENV === 'production' ? "https" : "http") + "://"+baseUrl+"/en";
         const data = {
-            "message": message,
-            "alicePub": alicePubKey
+            "plaintext": message,
+            "alices_public_key": alicePubKey
         };
         let axiosConfig = {
             headers: {
@@ -31,6 +33,7 @@ export const Encryptor = () => {
             console.log(response);
             setCapsule(JSON.stringify(response.data.capsule));
             setCypertext(JSON.stringify(response.data.cypertext));
+            setError("");
         } catch (e) {
             setError(e.message);
         }

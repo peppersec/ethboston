@@ -4,23 +4,30 @@ import {Button, InputGroup, Text, TextArea} from "@blueprintjs/core";
 import {Intent} from "@blueprintjs/core/lib/esm/common/intent";
 import Axios from "axios";
 
-
+// "localhost:5000"
+// "167.99.255.241:5000"
+const baseUrl = "localhost:5000"
 export const Decryptor = () => {
-    const [privateKey, setPrivateKey] = useState();
+    const [alicePubKey, setAlicePubKey] = useState("03edd6db086fc9d45194253ad64decc24a699ee1bd498dabdcfdfbb7ecd3e94cfb");
+    const [aliceVerKey, setAliceVerKey] = useState("03edd6db086fc9d45194253ad64decc24a699ee1bd498dabdcfdfbb7ecd3e94cfb");
+    const [bobPrivKey, setBobPrivKey] = useState("03edd6db086fc9d45194253ad64decc24a699ee1bd498dabdcfdfbb7ecd3e94cfb");
     const [encryptedMessage, setEncryptedMessage] = useState();
     const [capsule, setCapsule] = useState();
-    const [fragments, setFragments] = useState();
+    const [kfrags, setKfrags] = useState();
+    
     const [result, setResult] = useState("");
     const [error, setError] = useState("");
 
     const decryptButtonHandler = async () => {
 
-        const url = (process.env.NODE_ENV === 'production' ? "https" : "http") + "://167.99.255.241:5000/decrypt";
+        const url = (process.env.NODE_ENV === 'production' ? "https" : "http") + "://"+baseUrl+"/de";
         const data = {
-            "recipient": privateKey,
-            "data": encryptedMessage,
-            "capsule": capsule,
-            "fragments": fragments
+            "alices_public_key": alicePubKey, 
+            "alices_verifying_key": aliceVerKey,
+            "ciphertext": encryptedMessage,
+            "bobs_private_key": bobPrivKey,
+            "kfrags": kfrags,
+            "capsule": capsule
         };
         let axiosConfig = {
             headers: {
@@ -33,6 +40,7 @@ export const Decryptor = () => {
             const response = await Axios.post(url, data, axiosConfig);
             console.log(response);
             setResult(JSON.stringify(response.data));
+            setError("");
         } catch (e) {
             setError(e.message);
         }
@@ -47,23 +55,35 @@ export const Decryptor = () => {
                         value={encryptedMessage}
             />
             <br/>
-            <p> pk </p>
+            <p> Bob privk </p>
             <InputGroup placeholder={"private key"}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPrivateKey(event.target.value)}
-                        value={privateKey}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setBobPrivKey(event.target.value)}
+                        value={bobPrivKey}
             />
+            <br/>
+            <p> Alice pubk </p>
+            <InputGroup placeholder={"pub key"}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAlicePubKey(event.target.value)}
+                        value={alicePubKey}
+            />
+            <br/>
+            <p> Alice verk </p>
+            <InputGroup placeholder={"pub key"}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAliceVerKey(event.target.value)}
+                        value={aliceVerKey}
+            />
+            <br/>
+            <p> kfrags </p>
+            <InputGroup placeholder={"capsule"}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setKfrags(event.target.value)}
+                        value={kfrags}
+            />
+
             <br/>
             <p> capsule </p>
             <InputGroup placeholder={"capsule"}
                         onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCapsule(event.target.value)}
                         value={capsule}
-            />
-
-            <br/>
-            <p> fragments </p>
-            <InputGroup placeholder={"fragments"}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFragments(event.target.value)}
-                        value={fragments}
             />
 
             <br/>
