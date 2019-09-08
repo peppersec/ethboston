@@ -101,14 +101,19 @@ def en_route():
     alices_public_key = keys.UmbralPublicKey.from_bytes(bytes.fromhex(alices_public_key_hex))
 
     plaintext =  request.json['plaintext']
-    return (en(alices_public_key, plaintext)), 200
+    ciphertext, capsule = en(alices_public_key, plaintext)
+    print (ciphertext)
+    return json.dumps({
+        "ciphertext":ciphertext, 
+        "ciphertext": capsule.to_bytes().hex()
+        }), 200
 
 def en(alices_public_key, plaintext):
     ################# ENCRYPT
     # Encrypt data with Alice's public key.
     ################# []
     # plaintext = b'Proxy Re-Encryption is cool!'
-    ciphertext, capsule = pre.encrypt(alices_public_key, plaintext)
+    ciphertext, capsule = pre.encrypt(alices_public_key, str.encode(plaintext))
     return ciphertext, capsule
 
 
@@ -129,6 +134,7 @@ def de_route():
     for skfrag in serialized_kfrags:
         kfrags.append(KFrag.from_bytes(bytes.fromHex(skfrag)))
 
+    de()
 
     return "", 200
 
