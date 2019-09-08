@@ -13,41 +13,40 @@ def encrypt():
     if not request.json :
         abort(400)
 
-    alice_public_key = request.json['sender']
+    
     bob_public_key = request.json['recipient']
     signedtext = request.json['data']
+
+    alices_signing_key = keys.UmbralPrivateKey.gen_key()
+    alices_verifying_key = alices_signing_key.get_pubkey()
+    alices_signer = signing.Signer(private_key=alices_signing_key)
+
     #signedText
     #0x1206df9aa1d4a0b924f01cc75aa4b2456c4490b77d72f955aa331a59ec8f5863024b94a686d1e4cdd5057f4d01eb6fa2431b5ad8a4041b7ab1f9f55b6f1cc6ac1b
-    alice = keys.UmbralPublicKey.from_hex(alice_public_key)
-    bob = keys.UmbralPublicKey.from_hex(bob_public_key)
-    ciphertext, capsule = pre.encrypt(alice, signedtext)
-
-    #grants access to Bob
+    bob = keys.UmbralPublicKey.from_bytes(bytes.fromhex('03' + bob_public_key[:64]))
+    ciphertext, capsule = pre.encrypt(alices_verifying_key, str.encode(signedtext))
+#grants access to Bob
     
-    kfrags = random.sample(kfrags, 10)      # M - Threshold
-    capsule.set_correctness_keys(delegating=alice, receiving=bob, verifying=alice)
-    cfrags = list()                 # Bob's cfrag collection
-    for kfrag in kfrags:
-        cfrag = pre.reencrypt(kfrag=kfrag, capsule=capsule)
-        cfrags.append(cfrag)
-    kfrags = random.sample(kfrags,10)
-
-    return jsonify({"encrypted":ciphertext, "capsule":capsule}), 200
+    kfrags = pre.generate_kfrags(delegating_privkey=alices_signing_key,
+    signer=alices_signer,
+    receiving_pubkey=bob,
+    threshold=10,
+    N=20)
+#, "capsule":capsule
+    return jsonify(ciphertext = ciphertext.hex(), capsule = capsule.to_bytes().hex()), 200
 
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
     if not request.json :
         abort(400)
 
-    bob_public_key = request.json['recipient']
+    bob_private_key = request.json['recipient']
     ciphertext = request.json['data']
     capsule = request.json['capsule']
-
-    bob = keys.UmbralPublicKey.from_hex(bob_public_key)
-
+    
     cleartext = pre.decrypt(ciphertext=ciphertext,
         capsule=capsule,
-        decrypting_key=bob)
+        decrypting_key=bob_private_key)
 
     return jsonify(cleartext), 200
 
