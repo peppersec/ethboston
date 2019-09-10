@@ -1,3 +1,5 @@
 
 app/__pycache__/*
 __pycache__/server.cpython-37.pyc
+frontend/.idea/
+frontend/node_modules/

@@ -5,11 +5,17 @@ from umbral.curve import SECP256K1
 from flask_cors import CORS
 import random
 import json
+from umbral.pre import Capsule
+from umbral.kfrags import KFrag
 
 config.set_default_curve(SECP256K1)
 
 app = Flask(__name__)
 CORS(app)
+from umbral.config import default_params
+params = default_params()
+
+# params
 
 def getUmbralPublicFromHex(str):
     public_key_dirty = str 
@@ -19,7 +25,7 @@ def getUmbralPublicFromHex(str):
 
 def getUmbralPrivateFromHex(str):
     private_key_dirty = str 
-    private_key_hex = public_key_dirty[-64:]
+    private_key_hex = private_key_dirty[-64:]
     private_key = keys.UmbralPrivateKey.from_bytes(bytes.fromhex(private_key_hex))
     return private_key
 
@@ -106,8 +112,8 @@ def en_route():
     ciphertext, capsule = en(alices_public_key, plaintext)
     print (ciphertext)
     return json.dumps({
-        "ciphertext":ciphertext, 
-        "ciphertext": capsule.to_bytes().hex()
+        "ciphertext":ciphertext.hex(), 
+        "capsule": capsule.to_bytes().hex()
         }), 200
 
 def en(alices_public_key, plaintext):
@@ -117,6 +123,8 @@ def en(alices_public_key, plaintext):
     # plaintext = b'Proxy Re-Encryption is cool!'
 
     ciphertext, capsule = pre.encrypt(alices_public_key, str.encode(plaintext))
+
+    # print("params", params.to_bytes())
     return ciphertext, capsule
 
 
@@ -125,21 +133,21 @@ def de_route():
     if not request.json:
         abort(400)
     capsule_raw = request.json['capsule']
-    capsule = Capsule.from_bytes(bytes.fromHex(capsule_raw))
+    capsule = Capsule.from_bytes(bytes.fromhex(capsule_raw), params)
 
     alices_public_key = getUmbralPublicFromHex(request.json['alices_public_key'])
     alices_verifying_key = getUmbralPublicFromHex(request.json['alices_verifying_key']) # ? maybe without 03
-    ciphertext = request.json['ciphertext']
+    ciphertext = bytes.fromhex(request.json['ciphertext'])
     bobs_private_key = getUmbralPrivateFromHex(request.json['bobs_private_key'])
     # kfrags
     serialized_kfrags = request.json['kfrags']
     kfrags = []
     for skfrag in serialized_kfrags:
-        kfrags.append(KFrag.from_bytes(bytes.fromHex(skfrag)))
+        kfrags.append(KFrag.from_bytes(bytes.fromhex(skfrag)))
 
-    de(capsule, alices_public_key, alices_verifying_key, ciphertext, bobs_private_key, kfrags)
-
-    return "", 200
+    responce = de(capsule, alices_public_key, alices_verifying_key, ciphertext, bobs_private_key, kfrags)
+    print(responce)
+    return responce, 200
 
 def de(capsule, alices_public_key, alices_verifying_key, ciphertext, bobs_private_key, kfrags):
     bobs_public_key = bobs_private_key.get_pubkey()
